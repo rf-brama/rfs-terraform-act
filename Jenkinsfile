@@ -6,7 +6,7 @@ pipeline {
                 script {
                     currentBuild.displayName = params.version
                 }
-                sh 'terraform init -input=false'
+                sh '/usr/local/bin/terraform init -input=false'
             }
         }
     }
