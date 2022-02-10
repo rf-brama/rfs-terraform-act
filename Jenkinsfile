@@ -21,7 +21,7 @@ pipeline {
                 }
                 sh '/usr/local/bin/terraform init -input=false'
                 // sh '/usr/local/bin/terraform workspace select ${environment}'
-                sh "/usr/local/bin/terraform plan -input=false -out tfplan"
+                sh '/usr/local/bin/terraform plan -input=false -out tfplan'
                 sh '/usr/local/bin/terraform show -no-color tfplan > tfplan.txt'
             }
         }
@@ -44,7 +44,7 @@ pipeline {
 
         stage('Apply') {
             steps {
-                sh "/usr/local/bin/terraform apply -input=false tfplan"
+                sh '/usr/local/bin/terraform apply -input=false tfplan'
             }
         }
     }
