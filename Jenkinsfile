@@ -7,52 +7,83 @@ pipeline {
         booleanParam(name: 'destroy', defaultValue: false, description: 'Destroy Terraform build?')
 
     }
-    
-    environment {
+
+
+     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        TF_IN_AUTOMATION      = '1'
     }
 
+
     stages {
-        stage('Plan') {
+        stage('checkout') {
             steps {
-                script {
-                    currentBuild.displayName = params.version
+                 script{
+                        dir("terraform")
+                        {
+                            git "https://github.com/troy-ingram/week-24-project.git"
+                        }
+                    }
                 }
+            }
+
+        stage('Plan') {
+            when {
+                not {
+                    equals expected: true, actual: params.destroy
+                }
+            }
+            
+            steps {
                 sh '/usr/local/bin/terraform init -input=false'
-                sh '/usr/local/bin/terraform workspace select ${environment} || /usr/local/bin/terraform workspace new ${environment}'
-                sh '/usr/local/bin/terraform plan -input=false -out tfplan'
+                sh "'/usr/local/bin/terraform workspace select ${environment} || /usr/local/bin/terraform workspace new ${environment}'"
+                sh '/usr/local/bin/terraform plan -var-file terraform.tfvars -input=false -out tfplan'
                 sh '/usr/local/bin/terraform show -no-color tfplan > tfplan.txt'
             }
         }
-
         stage('Approval') {
-            when {
-                not {
-                    equals expected: true, actual: params.autoApprove
+           when {
+               not {
+                   equals expected: true, actual: params.autoApprove
+               }
+               not {
+                    equals expected: true, actual: params.destroy
                 }
-            }
+           }
+           
+                
+            
 
-            steps {
-                script {
+           steps {
+               script {
                     def plan = readFile 'tfplan.txt'
                     input message: "Do you want to apply the plan?",
-                        parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-                }
-            }
-        }
+                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+               }
+           }
+       }
 
         stage('Apply') {
-            steps {
-                sh '/usr/local/bin/terraform apply -input=false tfplan'
+            when {
+                not {
+                    equals expected: true, actual: params.destroy
+                }
             }
+            
+            steps {
+                sh "/usr/local/bin/terraform apply -input=false tfplan"
+            }
+        }
+        
+        stage('Destroy') {
+            when {
+                equals expected: true, actual: params.destroy
+            }
+        
+        steps {
+           sh "/usr/local/bin/terraform destroy --auto-approve"
         }
     }
 
-    post {
-        always {
-            archiveArtifacts artifacts: 'tfplan.txt'
-        }
-    }
+  }
 }
