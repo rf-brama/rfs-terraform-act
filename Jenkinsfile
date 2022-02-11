@@ -8,8 +8,8 @@ pipeline {
     }
     
     environment {
-        AWS_ACCESS_KEY_ID     = var.terraform.tfvars
-        AWS_SECRET_ACCESS_KEY = var.teraform.tfvars
+        AWS_ACCESS_KEY_ID     = 'var.terraform.tfvars'
+        AWS_SECRET_ACCESS_KEY = 'var.teraform.tfvars'
         TF_IN_AUTOMATION      = '1'
     }
 
