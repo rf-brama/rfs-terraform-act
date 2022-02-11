@@ -2,88 +2,56 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'environment', defaultValue: 'terraform', description: 'Workspace/environment file to use for deployment')
+        string(name: 'environment', defaultValue: 'default', description: 'Workspace/environment file to use for deployment')
+        string(name: 'version', defaultValue: '', description: 'Version variable to pass to Terraform')
         booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
-        booleanParam(name: 'destroy', defaultValue: false, description: 'Destroy Terraform build?')
-
     }
-
-
-     environment {
+    
+    environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        TF_IN_AUTOMATION      = '1'
     }
 
-
     stages {
-        stage('checkout') {
-            steps {
-                 script{
-                        dir("terraform")
-                        {
-                            git "https://github.com/rf-brama/rfs-terraform-act.git"
-                        }
-                    }
-                }
-            }
-
         stage('Plan') {
-            when {
-                not {
-                    equals expected: true, actual: params.destroy
-                }
-            }
-            
             steps {
+                script {
+                    currentBuild.displayName = params.version
+                }
                 sh '/usr/local/bin/terraform init -input=false'
                 sh "'/usr/local/bin/terraform workspace select ${environment} || /usr/local/bin/terraform workspace new ${environment}'"
                 sh '/usr/local/bin/terraform plan -var-file terraform.tfvars -input=false -out tfplan'
                 sh '/usr/local/bin/terraform show -no-color tfplan > tfplan.txt'
             }
         }
+
         stage('Approval') {
-           when {
-               not {
-                   equals expected: true, actual: params.autoApprove
-               }
-               not {
-                    equals expected: true, actual: params.destroy
-                }
-           }
-           
-                
-            
-
-           steps {
-               script {
-                    def plan = readFile 'tfplan.txt'
-                    input message: "Do you want to apply the plan?",
-                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-               }
-           }
-       }
-
-        stage('Apply') {
             when {
                 not {
-                    equals expected: true, actual: params.destroy
+                    equals expected: true, actual: params.autoApprove
                 }
             }
-            
+
             steps {
-                sh "/usr/local/bin/terraform apply -input=false tfplan"
+                script {
+                    def plan = readFile 'tfplan.txt'
+                    input message: "Do you want to apply the plan?",
+                        parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                }
             }
         }
-        
-        stage('Destroy') {
-            when {
-                equals expected: true, actual: params.destroy
+
+        stage('Apply') {
+            steps {
+                sh '/usr/local/bin/terraform apply -input=false tfplan'
             }
-        
-        steps {
-           sh "/usr/local/bin/terraform destroy --auto-approve"
         }
     }
 
-  }
+    post {
+        always {
+            archiveArtifacts artifacts: 'tfplan.txt'
+        }
+    }
 }
