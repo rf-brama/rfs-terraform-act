@@ -24,7 +24,7 @@ pipeline {
                 script {
                     currentBuild.displayName = params.version
                 }
-                sh '/usr/local/bin/terraform destroy -input=false tfplan'              
+                sh '/usr/local/bin/terraform destroy -auto-approve'              
             }
         }
     }
