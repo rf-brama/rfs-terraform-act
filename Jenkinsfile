@@ -16,7 +16,7 @@ pipeline {
                 script {
                     currentBuild.displayName = params.version
                 }
-                sh '/usr/local/bin/terraform destroy -input=false -out tfplan'              
+                sh '/usr/local/bin/terraform apply -input=false tfplan'              
             }
         }
                         stage('destroy') {
@@ -24,7 +24,7 @@ pipeline {
                 script {
                     currentBuild.displayName = params.version
                 }
-                sh '/usr/local/bin/terraform destroy -input=false -out tfplan'              
+                sh '/usr/local/bin/terraform destroy -input=false tfplan'              
             }
         }
     }
