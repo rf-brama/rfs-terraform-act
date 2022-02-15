@@ -7,8 +7,8 @@ pipeline {
                 script {
                     currentBuild.displayName = params.version
                 }
-                sh '/usr/local/bin/terraform init -input=false'
-                sh '/usr/local/bin/terraform init -migrate-state -input=false'
+                // sh '/usr/local/bin/terraform init -input=false'
+                sh '/usr/local/bin/terraform init -reconfigure -input=false'
                 sh '/usr/local/bin/terraform plan -input=false -out tfplan'             
             }
         }
