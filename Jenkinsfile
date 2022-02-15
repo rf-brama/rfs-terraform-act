@@ -8,7 +8,8 @@ pipeline {
                     currentBuild.displayName = params.version
                 }
                 sh '/usr/local/bin/terraform init -input=false'
-                sh '/usr/local/bin/terraform plan -input=false -out tfplan'               
+                sh '/usr/local/bin/terraform plan -input=false -out tfplan'
+                sh '/usr/local/bin/terraform show -input=false -out tfplan'              
             }
         }
     }
