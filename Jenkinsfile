@@ -39,12 +39,12 @@ pipeline {
     }
     stages{
         
-        stage('clean workspaces -----------') { 
-            steps {
-              cleanWs()
-              sh 'env'
-            } //steps
-        }  //stage
+        // stage('clean workspaces -----------') { 
+        //     steps {
+        //       cleanWs()
+        //       sh 'env'
+        //     } //steps
+        // }  //stage
 
         //${params.Action}
         // stage("git clone code terraform"){
@@ -57,7 +57,7 @@ pipeline {
     
         stage('Terraform init----') {
          steps {
-            sh '/usr/local/bin/terraform --version'
+            // sh '/usr/local/bin/terraform --version'
             sh '/usr/local/bin/terraform init -input=false'
             } //steps
         }  //stage
