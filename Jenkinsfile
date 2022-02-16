@@ -1,32 +1,96 @@
+// pipeline {
+//     agent any
+
+//     stages {
+//         stage('Plan') {
+//             steps {
+//                 script {
+//                     currentBuild.displayName = params.version
+//                 }
+//                 sh '/usr/local/bin/terraform init -input=false'
+//                 // sh '/usr/local/bin/terraform init -reconfigure -input=false'//This command is for reconfiguring state
+//                 sh '/usr/local/bin/terraform plan -input=false -out tfplan'             
+//             }
+//         }
+//                 stage('apply') {
+//             steps {
+//                 script {
+//                     currentBuild.displayName = params.version
+//                 }
+//                 sh '/usr/local/bin/terraform apply -input=false tfplan'              
+//             }
+//         }
+//                         stage('destroy') {
+//             steps {
+//                 script {
+//                     currentBuild.displayName = params.version
+//                 }
+//                 sh '/usr/local/bin/terraform destroy -auto-approve'              
+//             }
+//         }
+//     }
+// }
+
 pipeline {
     agent any
-
-    stages {
-        stage('Plan') {
-            steps {
-                script {
-                    currentBuild.displayName = params.version
-                }
-                sh '/usr/local/bin/terraform init -input=false'
-                // sh '/usr/local/bin/terraform init -reconfigure -input=false'//This command is for reconfiguring state
-                sh '/usr/local/bin/terraform plan -input=false -out tfplan'             
-            }
-        }
-                stage('apply') {
-            steps {
-                script {
-                    currentBuild.displayName = params.version
-                }
-                sh '/usr/local/bin/terraform apply -input=false tfplan'              
-            }
-        }
-                        stage('destroy') {
-            steps {
-                script {
-                    currentBuild.displayName = params.version
-                }
-                sh '/usr/local/bin/terraform destroy -auto-approve'              
-            }
-        }
+    parameters { 
+      choice(name: 'Environment', choices: ['dev', 'qa', 'prod'], description: 'Select the environment to use')
+      choice(name: 'Action', choices: ['', 'plan-apply', 'destroy'], description: 'Select the action to use')
     }
-}
+    stages{
+        
+        stage('clean workspaces -----------') { 
+            steps {
+              cleanWs()
+              sh 'env'
+            } //steps
+        }  //stage
+
+        //${params.Action}
+        // stage("git clone code terraform"){
+        //     steps {
+        //         git credentialsId: '10879bde-beaa-4f61-8430-aec2791975ca', url: 'https://github.com/PegaChucho/Terraform-jenkins-test.git'
+        //         sh 'pwd' 
+        //         sh 'ls -l'
+        //     } //steps
+        // }  //stage
+    
+        stage('Terraform init----') {
+         steps {
+            sh '/usr/local/bin/terraform --version'
+            sh '/usr/local/bin/terraform init -input=false'
+            } //steps
+        }  //stage
+
+        stage('Terraform plan----') {
+            steps {
+               sh '/usr/local/bin/terraform plan -refresh=true -lock=false'
+            } //steps
+        }  //stage
+        
+        stage('Action confirmation') {
+            steps {
+                script {
+                    def userInput = input(id: 'confirm', message: params.ACCION + '?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Apply terraform', name: 'confirm'] ])
+                }
+            }
+        }
+        
+        stage('Terraform apply or destroy ----------------') {
+            steps {
+               sh 'echo "Start"'
+            script{  
+                if (params.ACCION == "destroy"){
+                         sh 'echo "Started" + params.ACTION'   
+                         sh '/usr/local/bin/terraform destroy -auto-approve'
+                } else {
+                         sh ' echo  "Started" + params.ACTION'                 
+                         sh '/usr/local/bin/terraform apply -refresh=true -auto-approve'  
+                }  // if
+
+            }
+            } //steps
+        }  //stage
+
+   }  // stages
+} //pipeline
