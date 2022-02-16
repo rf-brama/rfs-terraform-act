@@ -81,10 +81,10 @@ pipeline {
                sh 'echo "Start"'
             script{  
                 if (params.Action == "destroy"){
-                         sh 'echo "Started" + params.ACTION'   
+                         sh 'echo "Started" + params.Action'   
                          sh '/usr/local/bin/terraform destroy -auto-approve'
                 } else {
-                         sh ' echo  "Started" + params.ACTION'                 
+                         sh ' echo  "Started" + params.Action'                 
                          sh '/usr/local/bin/terraform apply -refresh=true -auto-approve'  
                 }  // if
 
