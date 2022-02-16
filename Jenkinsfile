@@ -80,7 +80,7 @@ pipeline {
             steps {
                sh 'echo "Start"'
             script{  
-                if (params.ACCION == "destroy"){
+                if (params.Action == "destroy"){
                          sh 'echo "Started" + params.ACTION'   
                          sh '/usr/local/bin/terraform destroy -auto-approve'
                 } else {
