@@ -58,8 +58,8 @@ pipeline {
         stage('Terraform init----') {
          steps {
             // sh '/usr/local/bin/terraform --version'
-            //sh '/usr/local/bin/terraform init -input=false'
-            sh '/usr/local/bin/terraform init -reconfigure -input=false'//This command is for reconfiguring state
+            sh '/usr/local/bin/terraform init -input=false'
+            //sh '/usr/local/bin/terraform init -reconfigure -input=false'//This command is for reconfiguring state
             } //steps
         }  //stage
 
